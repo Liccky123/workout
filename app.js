@@ -3,6 +3,7 @@
 
 /* ---------- データ ---------- */
 const STORAGE_KEY = "kintore.data.v1";
+let demoMode = false;   // ?demo=1 のときtrue。永続ストレージへの書き込みを禁止する
 const PARTS = ["胸", "背中", "肩", "二頭", "三頭", "前腕", "前もも", "もも裏", "お尻", "ふくらはぎ", "腹筋", "その他"];
 const DATA_VERSION = 5;
 const EQUIPS = ["バーベル", "ダンベル", "マシン", "ケーブル", "自重", "その他"];
@@ -1214,6 +1215,8 @@ $("importFile").addEventListener("change", e => {
   e.target.value = "";
 });
 $("btnWipe").addEventListener("click", () => {
+  // デモ表示中は保存しない約束なので、削除も行わない（実データ保護）
+  if (demoMode) { toast("デモ表示中です。通常起動してから操作してください"); return; }
   if (!confirm("全データを削除しますか？この操作は取り消せません。")) return;
   if (!confirm("本当に削除しますか？")) return;
   localStorage.removeItem(STORAGE_KEY);
@@ -1948,10 +1951,11 @@ function loadDemoData() {
 {
   const q = new URLSearchParams(location.search);
   if (q.get("demo") === "1") {
+    demoMode = true;
     loadDemoData();
     saveData = function () { /* デモ中は保存しない */ };
-    initUI();
   }
+  initUI();   // 通常起動でも必ず初期描画する
   const t = q.get("tab");
   if (t && Object.prototype.hasOwnProperty.call(pages, t)) showPage(t);
   const dn = q.get("detail");

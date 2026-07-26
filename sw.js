@@ -1,5 +1,5 @@
-/* 筋トレログ Service Worker */
-const CACHE_NAME = "kintore-v26";
+﻿/* 筋トレログ Service Worker */
+const CACHE_NAME = "kintore-v27";
 const ASSETS = [
   "./index.html",
   "./style.css",

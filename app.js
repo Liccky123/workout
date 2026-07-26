@@ -1895,12 +1895,54 @@ function initUI() {
   updateReelTags();
   slotInitStrips();
 }
-initUI();
-
-/* アプリショートカット (?tab=slot 等) から起動されたときのタブ切替 */
+/* デモモード (?demo=1): サンプル記録をメモリ上だけに読み込む。保存はしない */
+function loadDemoData() {
+  const byName = n => data.exercises.find(e => e.name === n);
+  const plan = [
+    { name: "ベンチプレス", base: 52.5, reps: [10, 8, 8], step: 2.5 },
+    { name: "ラットプルダウン", base: 45, reps: [12, 10, 10], step: 2.5 },
+    { name: "スクワット", base: 70, reps: [10, 8, 6], step: 5 },
+    { name: "ショルダープレス", base: 25, reps: [12, 10, 10], step: 2.5 },
+    { name: "ダンベルカール", base: 12, reps: [12, 12, 10], step: 1 },
+  ];
+  const today = new Date();
+  let seed = 7;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let w = 7; w >= 0; w--) {
+    for (const dow of [0, 3, 5]) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - (w * 7 + dow));
+      if (d > today) continue;
+      const ds = todayStr(d);
+      const picks = plan.filter(() => rnd() > 0.35).slice(0, 3);
+      (picks.length ? picks : [plan[0]]).forEach(p => {
+        const ex = byName(p.name);
+        if (!ex) return;
+        const w8 = p.base + Math.round((7 - w) * 0.6) * p.step;
+        p.reps.forEach((r, i) => {
+          const ts = new Date(d); ts.setHours(19, 10 + i * 4, 0);
+          data.sets.push({ id: uid(), exId: ex.id, date: ds, ts: ts.getTime(), weight: w8, reps: r });
+        });
+      });
+      data.sessions[ds] = { end: "20:25", endDate: ds };
+    }
+  }
+}
 {
-  const t = new URLSearchParams(location.search).get("tab");
+  const q = new URLSearchParams(location.search);
+  if (q.get("demo") === "1") {
+    loadDemoData();
+    saveData = function () { /* デモ中は保存しない */ };
+    initUI();
+  }
+  const t = q.get("tab");
   if (t && Object.prototype.hasOwnProperty.call(pages, t)) showPage(t);
+  const dn = q.get("detail");
+  if (dn) {
+    const ex = data.exercises.find(e => e.name === dn);
+    if (ex) { selectExercise(ex.id); openExDetail(ex.id); }
+  }
+  if (q.get("picker") === "1") $("btnOpenPicker").click();
 }
 
 /* Service Worker */

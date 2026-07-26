@@ -1458,6 +1458,19 @@ function updateTimerPill() {
   $("timerPill").hidden = !show;
   if (show) $("timerPillTime").textContent = fmtTime(timerRemain);
 }
+/* 画面スリープ防止: iOSではアプリが閉じると計測が止まるため、休憩中は画面を点けておく */
+let wakeLock = null;
+async function acquireWakeLock() {
+  if (!("wakeLock" in navigator) || wakeLock) return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch (e) { /* 非対応・拒否時は無視 */ }
+}
+function releaseWakeLock() {
+  if (wakeLock) { try { wakeLock.release(); } catch (e) { /* 無視 */ } wakeLock = null; }
+}
+
 function startTimer(sec) {
   if (sec !== undefined) { timerTotal = sec; timerRemain = sec; }
   if (timerRemain <= 0) timerRemain = timerTotal;
@@ -1466,6 +1479,7 @@ function startTimer(sec) {
   timerInterval = setInterval(tick, 250);
   ensureAudio();
   ensureNotifyPermission();
+  acquireWakeLock();
   updateTimerUI();
 }
 function pauseTimer() {
@@ -1473,12 +1487,14 @@ function pauseTimer() {
   timerRemain = Math.max(0, (timerEnd - Date.now()) / 1000);
   timerEnd = null;
   clearInterval(timerInterval);
+  releaseWakeLock();
   updateTimerUI();
 }
 function resetTimer() {
   timerEnd = null;
   clearInterval(timerInterval);
   timerRemain = timerTotal;
+  releaseWakeLock();
   updateTimerUI();
 }
 function tick() {
@@ -1493,6 +1509,7 @@ function tick() {
   updateTimerUI();
 }
 function timerDone() {
+  releaseWakeLock();
   if (data.settings.sound) beep();
   if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 500]);
   toast("休憩終了！次のセット 💪");
@@ -1530,7 +1547,8 @@ function sendRestNotification() {
 }
 /* バックグラウンドから戻ったとき即座に追いつく */
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && timerEnd) tick();
+  if (document.hidden) return;
+  if (timerEnd) { tick(); acquireWakeLock(); }   // 復帰時に経過分を反映
 });
 
 /* サウンド (WebAudio) */
@@ -1942,6 +1960,22 @@ function loadDemoData() {
     if (ex) { selectExercise(ex.id); openExDetail(ex.id); }
   }
   if (q.get("picker") === "1") $("btnOpenPicker").click();
+}
+
+/* iOS Safari で未インストールなら「ホーム画面に追加」を案内 */
+{
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = window.navigator.standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches;
+  const dismissed = localStorage.getItem("kintore.iosHintDismissed") === "1";
+  if (isIOS && !standalone && !dismissed) {
+    setTimeout(() => { $("iosInstall").hidden = false; }, 1200);
+    $("iosInstallClose").addEventListener("click", () => {
+      $("iosInstall").hidden = true;
+      localStorage.setItem("kintore.iosHintDismissed", "1");
+    });
+  }
 }
 
 /* Service Worker */

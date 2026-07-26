@@ -20,11 +20,13 @@
     { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "screenshots": [
-    { "src": "screenshots/s1-log.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "カレンダーと今日のワークアウト" },
-    { "src": "screenshots/s2-detail.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "種目詳細：フォームと効く筋肉" },
-    { "src": "screenshots/s3-slot.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "おまかせスロットでメニュー決定" },
-    { "src": "screenshots/s4-chart.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "進捗グラフ" },
-    { "src": "screenshots/s5-timer.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "休憩タイマー" },
+    { "src": "screenshots/s1-log.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "カレンダーと今日のワークアウト" },
+    { "src": "screenshots/s2-detail.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "種目詳細：フォームと効く筋肉" },
+    { "src": "screenshots/s3-slot.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "おまかせスロットでメニュー決定" },
+    { "src": "screenshots/s4-chart.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "進捗グラフ" },
+    { "src": "screenshots/s5-timer.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "休憩タイマー" },
+    { "src": "screenshots/s6-picker.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "種目を検索" },
+    { "src": "screenshots/s7-hist.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "履歴" },
     { "src": "screenshots/w1-log.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide", "label": "記録画面" }
   ],
   "shortcuts": [

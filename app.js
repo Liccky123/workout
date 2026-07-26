@@ -704,9 +704,8 @@ function renderMuscleMapPhoto(mains, subs) {
     add(mains, "pm-main");
     return `<div class="photo-body"><img src="${img}" alt="${view === "f" ? "前面" : "背面"}">${divs}<span class="photo-tag">${view === "f" ? "前" : "後"}</span></div>`;
   };
-  $("muscleMap").innerHTML =
-    `<div class="photo-wrap">${body("f")}${body("b")}</div>
-     <div class="photo-credit">図: OpenStax A&amp;P (CC BY 4.0)・フォーム: wger.de/Everkinetic (CC BY-SA)</div>`;
+  $("muscleMap").innerHTML = `<div class="photo-wrap">${body("f")}${body("b")}</div>`;
+  $("muscleCredit").textContent = "図: OpenStax A&P (CC BY 4.0)・フォーム: wger.de / Everkinetic (CC BY-SA)";
   // 画像が読み込めない環境ではベクター解剖図にフォールバック
   $("muscleMap").querySelectorAll("img").forEach(im => {
     im.onerror = () => renderMuscleMapVector(mains, subs);

@@ -310,13 +310,13 @@ main { padding: 0 12px; max-width: 560px; margin: 0 auto; }
 .detail-h2 { font-size: 14px; font-weight: 700; margin: 6px 0 2px; }
 .detail-video { margin: 2px 0 6px; }
 .detail-visual {
-  display: flex; justify-content: space-around; align-items: center;
-  gap: 8px; padding: 6px 0 2px;
+  display: flex; justify-content: center; align-items: center;
+  gap: 8px; padding: 6px 0 2px; min-width: 0;
 }
-.detail-anim { position: relative; flex-shrink: 0; }
+.detail-anim { position: relative; flex: 0 1 auto; min-width: 0; }
 /* 実写フォーム画像 (開始⇄終了クロスフェード) */
 .anim-photo {
-  position: relative; width: 148px; height: 128px;
+  position: relative; width: min(148px, 40vw); height: min(128px, 35vw);
   background: #fff; border-radius: 12px; border: 1px solid var(--border);
   overflow: hidden;
 }
@@ -336,15 +336,15 @@ main { padding: 0 12px; max-width: 560px; margin: 0 auto; }
   50% { transform: scale(1.06); }
 }
 /* フォームアニメも「白グレーの体 + 効く部位だけ赤」で筋肉マップとお揃いに */
-.detail-anim svg { width: 124px; height: 124px; color: var(--text-muted); display: block; }
+.detail-anim svg { width: min(124px, 34vw); height: min(124px, 34vw); color: var(--text-muted); display: block; }
 .detail-anim::after {
   content: "フォーム"; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
   font-size: 10px; color: var(--text-muted); white-space: nowrap;
 }
-.detail-muscle { flex-shrink: 0; }
-.detail-muscle > svg { width: 150px; height: 116px; display: block; }
-.photo-wrap { display: flex; justify-content: center; gap: 12px; align-items: flex-end; }
-.photo-body { position: relative; height: 150px; }
+.detail-muscle { flex: 0 1 auto; min-width: 0; }
+.detail-muscle > svg { width: min(150px, 40vw); height: min(116px, 31vw); display: block; }
+.photo-wrap { display: flex; justify-content: center; gap: 10px; align-items: flex-end; }
+.photo-body { position: relative; height: min(146px, 38vw); }
 .photo-body img { height: 100%; width: auto; display: block; }
 .photo-ov { position: absolute; inset: 0; width: 100%; height: 100%; }
 .pm {
@@ -360,7 +360,10 @@ main { padding: 0 12px; max-width: 560px; margin: 0 auto; }
   position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
   font-size: 9px; color: var(--text-muted);
 }
-.photo-credit { text-align: center; font-size: 8.5px; color: var(--text-muted); margin-top: 14px; }
+.photo-credit {
+  text-align: center; font-size: 9px; color: var(--text-muted);
+  margin: 12px 0 4px; line-height: 1.5;
+}
 .muscle-label {
   font-size: 12px; color: var(--text-secondary); text-align: center;
   margin: 6px 0 8px; line-height: 1.6;

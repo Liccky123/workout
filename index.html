@@ -1,0 +1,372 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>筋トレログ</title>
+<meta name="description" content="ワークアウト記録・レストタイマー・進捗グラフ">
+<meta name="theme-color" content="#2a78d6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="筋トレ">
+<link rel="stylesheet" href="style.css?v=24">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>筋トレログ</h1>
+  <div class="header-date" id="headerDate"></div>
+</header>
+
+<main id="main">
+
+  <!-- ============ 記録タブ ============ -->
+  <section class="page active" id="page-log">
+    <div class="card cal-card">
+      <div class="cal-head">
+        <button class="cal-nav" id="calPrev">‹</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button class="cal-nav" id="calNext">›</button>
+      </div>
+      <div class="cal-summary" id="calSummary"></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-tile">
+        <div class="stat-label">今日のボリューム</div>
+        <div class="stat-value"><span id="statVolume">0</span><span class="stat-unit">kg</span></div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">セット数</div>
+        <div class="stat-value"><span id="statSets">0</span></div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">種目数</div>
+        <div class="stat-value"><span id="statExercises">0</span></div>
+      </div>
+    </div>
+
+    <div class="card" id="todayCard" hidden>
+      <div class="card-title-row">
+        <h2>今日のワークアウト ✅</h2>
+        <span class="day-vol" id="todayCardSummary"></span>
+      </div>
+      <div class="session-row">
+        <span class="session-item">開始 <b id="sessionStart">--:--</b></span>
+        <span class="session-arrow">→</span>
+        <span class="session-item">完了 <input type="time" id="sessionEndInput" class="session-end"><span class="session-nextday" id="sessionNextDay" hidden>翌日</span></span>
+        <button class="btn-ghost" id="btnEndNow">今おわり</button>
+        <span class="session-dur" id="sessionDur"></span>
+      </div>
+      <div id="todayCardList"></div>
+    </div>
+
+    <div class="card select-card">
+      <button class="btn-primary btn-big" id="btnOpenPicker">🏋️ 種目を選ぶ</button>
+      <div class="select-sub">
+        <button class="slot-shortcut-sm" id="goSlot">🎰 迷ったらおまかせスロット</button>
+        <button class="btn-ghost" id="btnAddExercise">＋ 種目を自作</button>
+      </div>
+    </div>
+
+    <div class="card" id="setInputCard" hidden>
+      <div class="card-title-row">
+        <h2 class="ex-head" id="selectedExHead"><span id="selectedExIcon" class="ex-head-ico"></span><span id="selectedExName">種目</span><span class="detail-hint">詳細 ›</span></h2>
+        <button class="btn-ghost btn-danger-ghost" id="btnDeleteExercise">種目削除</button>
+      </div>
+      <div class="ex-stats" id="exStats" hidden></div>
+      <div class="input-col">
+        <div class="stepper-block">
+          <div class="stepper-label">重量 (kg)</div>
+          <div class="stepper">
+            <button class="stepper-btn stepper-btn-txt" data-step="-2.5" data-target="weight">−2.5</button>
+            <button class="stepper-btn stepper-btn-txt" data-step="-0.5" data-target="weight">−0.5</button>
+            <input type="number" id="inputWeight" inputmode="decimal" min="0" step="0.5" value="20">
+            <button class="stepper-btn stepper-btn-txt" data-step="0.5" data-target="weight">+0.5</button>
+            <button class="stepper-btn stepper-btn-txt" data-step="2.5" data-target="weight">+2.5</button>
+          </div>
+        </div>
+        <div class="stepper-block">
+          <div class="stepper-label">回数 (rep)</div>
+          <div class="stepper">
+            <button class="stepper-btn" data-step="-1" data-target="reps">−</button>
+            <input type="number" id="inputReps" inputmode="numeric" min="1" step="1" value="10">
+            <button class="stepper-btn" data-step="1" data-target="reps">＋</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary btn-big" id="btnLogSet">セットを記録</button>
+      <div class="rest-row">
+        <button class="btn-secondary rest-adj" id="btnRestMinus">−10</button>
+        <button class="btn-secondary btn-rest-main" id="btnQuickRest">▶ 休憩タイマー 1:30</button>
+        <button class="btn-secondary rest-adj" id="btnRestPlus">＋10</button>
+      </div>
+      <label class="toggle-row">
+        <span>記録後に休憩タイマー自動スタート</span>
+        <input type="checkbox" id="autoTimerToggle">
+      </label>
+      <div class="today-sets" id="todaySets"></div>
+    </div>
+  </section>
+
+  <!-- ============ おまかせスロットタブ ============ -->
+  <section class="page" id="page-slot">
+    <div class="card slot-card">
+      <div class="slot-head">
+        <div class="slot-title">おまかせスロット</div>
+        <div class="slot-lamp" id="slotLamp"><span>GOGO!</span></div>
+      </div>
+      <div class="slot-mode-label">今日はどこを鍛える？</div>
+      <div class="chip-row slot-mode" id="slotModeChips"></div>
+      <div class="slot-reels">
+        <div class="slot-reel"><div class="reel-strip" id="reelStrip0"></div></div>
+        <div class="slot-reel"><div class="reel-strip" id="reelStrip1"></div></div>
+        <div class="slot-reel"><div class="reel-strip" id="reelStrip2"></div></div>
+      </div>
+      <div class="reel-tags" id="reelTags">
+        <span>押す系</span><span>引く系</span><span>脚・体幹</span>
+      </div>
+      <div class="slot-stops">
+        <button class="stop-btn stop-1" data-reel="0" disabled>STOP</button>
+        <button class="stop-btn stop-2" data-reel="1" disabled>STOP</button>
+        <button class="stop-btn stop-3" data-reel="2" disabled>STOP</button>
+      </div>
+      <button class="btn-primary btn-big" id="btnLever">🎰 レバーを引く</button>
+      <div class="slot-hint" id="slotHint">迷った日はスロットにおまかせ！レバーを引いて3種目を決めよう</div>
+    </div>
+    <div class="card" id="slotResult" hidden>
+      <h2>今日のメニュー 💪</h2>
+      <div id="slotResultList"></div>
+      <button class="btn-secondary btn-big" id="btnRespin">もう一回まわす</button>
+    </div>
+  </section>
+
+  <!-- ============ 履歴タブ ============ -->
+  <section class="page" id="page-history">
+    <button class="slot-shortcut" id="btnAddPast">＋ 過去の記録を追加（日付を選んで記録）</button>
+    <div id="historyList"></div>
+    <div class="card data-card">
+      <h2>データ管理</h2>
+      <div class="btn-row">
+        <button class="btn-secondary" id="btnExport">エクスポート</button>
+        <button class="btn-secondary" id="btnImport">インポート</button>
+        <button class="btn-secondary btn-danger" id="btnWipe">全削除</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </section>
+
+  <!-- ============ グラフタブ ============ -->
+  <section class="page" id="page-chart">
+    <div class="card">
+      <div class="chart-controls">
+        <select id="chartExercise" class="select"></select>
+        <div class="seg-control" id="metricSeg">
+          <button data-metric="max" class="seg-btn active">最大重量</button>
+          <button data-metric="volume" class="seg-btn">ボリューム</button>
+          <button data-metric="e1rm" class="seg-btn">推定1RM</button>
+          <button data-metric="reps" class="seg-btn">回数</button>
+        </div>
+        <div class="chip-row" id="rangeChips">
+          <button class="chip" data-range="30">1ヶ月</button>
+          <button class="chip active" data-range="90">3ヶ月</button>
+          <button class="chip" data-range="0">全期間</button>
+        </div>
+      </div>
+      <div class="stat-row chart-stats">
+        <div class="stat-tile">
+          <div class="stat-label">自己ベスト</div>
+          <div class="stat-value stat-value-sm"><span id="chartBest">–</span></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">直近</div>
+          <div class="stat-value stat-value-sm"><span id="chartLast">–</span></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">記録日数</div>
+          <div class="stat-value stat-value-sm"><span id="chartDays">–</span></div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartWrap">
+        <svg id="chartSvg"></svg>
+        <div class="chart-tooltip" id="chartTooltip" hidden></div>
+        <div class="chart-empty" id="chartEmpty" hidden>まだ記録がありません</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ タイマータブ ============ -->
+  <section class="page" id="page-timer">
+    <div class="card timer-card">
+      <div class="timer-ring-wrap">
+        <svg viewBox="0 0 240 240" id="timerSvg">
+          <circle class="ring-bg" cx="120" cy="120" r="104"></circle>
+          <circle class="ring-fg" cx="120" cy="120" r="104" id="ringFg"></circle>
+        </svg>
+        <div class="timer-center">
+          <div class="timer-time" id="timerDisplay">1:30</div>
+          <div class="timer-sub" id="timerSub">休憩タイマー</div>
+        </div>
+      </div>
+      <div class="chip-row timer-presets" id="timerPresets">
+        <button class="chip" data-sec="60">60秒</button>
+        <button class="chip active" data-sec="90">90秒</button>
+        <button class="chip" data-sec="120">2分</button>
+        <button class="chip" data-sec="180">3分</button>
+      </div>
+      <div class="btn-row timer-adjust">
+        <button class="btn-secondary" id="btnMinus10">−10秒</button>
+        <button class="btn-secondary" id="btnPlus10">＋10秒</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary btn-big" id="btnTimerStart">スタート</button>
+        <button class="btn-secondary btn-big" id="btnTimerReset">リセット</button>
+      </div>
+      <label class="toggle-row">
+        <span>終了時にサウンド</span>
+        <input type="checkbox" id="soundToggle" checked>
+      </label>
+      <label class="toggle-row">
+        <span>終了時に通知</span>
+        <input type="checkbox" id="notifyToggle" checked>
+      </label>
+      <div class="notify-hint" id="notifyHint" hidden>iPhoneでは Safari の共有メニューから「ホーム画面に追加」したアプリでのみ通知が届きます（iOS 16.4以降）</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- 実行中タイマーの浮きピル -->
+<button class="timer-pill" id="timerPill" hidden>⏱ <span id="timerPillTime"></span></button>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="log">
+    <svg viewBox="0 0 24 24"><path d="M4 14h3v-4H4v4zm13-4v4h3v-4h-3zM8.5 17h2V7h-2v10zm5-10v10h2V7h-2zM2 13.2h1v-2.4H2v2.4zm19-2.4v2.4h1v-2.4h-1z"/></svg>
+    <span>記録</span>
+  </button>
+  <button class="nav-btn" data-page="slot">
+    <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="6.5" y="9" width="2.6" height="6" rx="1" /><rect x="10.7" y="9" width="2.6" height="6" rx="1"/><rect x="14.9" y="9" width="2.6" height="6" rx="1"/></svg>
+    <span>おまかせ</span>
+  </button>
+  <button class="nav-btn" data-page="history">
+    <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 8.95 10h-2.02A7 7 0 1 1 13 5v3l4-4-4-4v3zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
+    <span>履歴</span>
+  </button>
+  <button class="nav-btn" data-page="chart">
+    <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.92 20.59 6.5l-7.09 8-4-4L2 18l1.5.5z"/></svg>
+    <span>グラフ</span>
+  </button>
+  <button class="nav-btn" data-page="timer">
+    <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42-1.41-1.41-1.42 1.42A8.96 8.96 0 0 0 12 4a9 9 0 1 0 9 9c0-2.12-.74-4.07-1.97-5.61zM12 20a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"/></svg>
+    <span>タイマー</span>
+  </button>
+</nav>
+
+<!-- 種目詳細サブページ -->
+<div class="picker" id="exDetailPage" hidden>
+  <div class="picker-head">
+    <h2 class="ex-head"><span id="detailIcon" class="ex-head-ico"></span><span id="detailName"></span></h2>
+    <button class="btn-ghost" id="detailClose">閉じる</button>
+  </div>
+  <div class="detail-sub" id="detailSub"></div>
+  <div class="picker-list detail-body">
+    <div class="detail-visual">
+      <div class="detail-anim" id="detailAnim"></div>
+      <div class="detail-muscle" id="muscleMap"></div>
+    </div>
+    <div class="muscle-label" id="muscleLabel"></div>
+    <div class="stat-row">
+      <div class="stat-tile"><div class="stat-label">自己ベスト</div><div class="stat-value stat-value-sm" id="dBest">–</div></div>
+      <div class="stat-tile"><div class="stat-label">推定1RM</div><div class="stat-value stat-value-sm" id="dE1rm">–</div></div>
+      <div class="stat-tile"><div class="stat-label">前回</div><div class="stat-value stat-value-sm" id="dPrev">–</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-tile"><div class="stat-label">累計セット</div><div class="stat-value stat-value-sm" id="dSets">–</div></div>
+      <div class="stat-tile"><div class="stat-label">総ボリューム</div><div class="stat-value stat-value-sm" id="dVol">–</div></div>
+      <div class="stat-tile"><div class="stat-label">記録日数</div><div class="stat-value stat-value-sm" id="dDays">–</div></div>
+    </div>
+    <div class="btn-row detail-actions">
+      <button class="btn-primary" id="detailGoLog">この種目を記録する</button>
+      <button class="btn-secondary" id="detailGoChart">詳しいグラフ</button>
+    </div>
+    <button class="btn-secondary btn-big detail-video" id="detailVideo">▶ もっと詳しい動画を探す（YouTube）</button>
+    <h2 class="detail-h2" id="detailChartTitle">推移（最大重量）</h2>
+    <div class="detail-chart">
+      <svg id="detailChartSvg"></svg>
+      <div class="chart-empty" id="detailChartEmpty" hidden>まだ記録がありません</div>
+    </div>
+    <label class="field-label detail-memo-label">メモ（シート高さ・グリップ幅・マシン番号など）
+      <textarea id="detailMemo" class="detail-memo" rows="3" placeholder="例: シート4、グリップ広め、フォーム注意点…"></textarea>
+    </label>
+    <h2 class="detail-h2">これまでの記録</h2>
+    <div id="detailHistory"></div>
+  </div>
+</div>
+
+<!-- 種目検索サブページ -->
+<div class="picker" id="pickerPage" hidden>
+  <div class="picker-head">
+    <input type="search" id="pickerSearch" class="picker-search" placeholder="種目名で検索…">
+    <button class="btn-ghost" id="pickerClose">閉じる</button>
+  </div>
+  <div class="chip-row" id="pickerPartChips"></div>
+  <div class="chip-row equip-row" id="pickerEquipChips"></div>
+  <div class="picker-list" id="pickerList"></div>
+</div>
+
+<!-- 種目追加モーダル -->
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal">
+    <h2>種目を追加</h2>
+    <label class="field-label">種目名
+      <input type="text" id="newExName" placeholder="例: インクラインベンチ">
+    </label>
+    <label class="field-label">部位
+      <select id="newExPart" class="select"></select>
+    </label>
+    <label class="field-label">器具
+      <select id="newExEquip" class="select"></select>
+    </label>
+    <div class="btn-row">
+      <button class="btn-secondary" id="btnModalCancel">キャンセル</button>
+      <button class="btn-primary" id="btnModalAdd">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 過去記録の追加・編集モーダル -->
+<div class="modal-backdrop" id="editSetBackdrop" hidden>
+  <div class="modal">
+    <h2 id="editSetTitle">セットを追加</h2>
+    <div class="edit-set-date" id="editSetDate"></div>
+    <label class="field-label" id="editSetDateLabel" hidden>日付
+      <input type="date" id="editSetDateInput">
+    </label>
+    <label class="field-label">種目
+      <select id="editSetEx" class="select"></select>
+    </label>
+    <label class="field-label">重量 (kg)
+      <input type="number" id="editSetWeight" step="0.5" min="0" inputmode="decimal">
+    </label>
+    <label class="field-label">回数 (rep)
+      <input type="number" id="editSetReps" step="1" min="1" inputmode="numeric">
+    </label>
+    <div class="btn-row">
+      <button class="btn-secondary" id="editSetCancel">キャンセル</button>
+      <button class="btn-primary" id="editSetSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="icons.js?v=24"></script>
+<script src="muscle.js?v=24"></script>
+<script src="app.js?v=24"></script>
+</body>
+</html>

@@ -1179,6 +1179,7 @@ $("btnAddPast").addEventListener("click", () => openSetEditor({ mode: "add", dat
 
 /* データ管理 */
 $("btnExport").addEventListener("click", () => {
+  if (demoMode) { toast("デモ表示中です。通常起動してから操作してください"); return; }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1187,7 +1188,10 @@ $("btnExport").addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
   toast("エクスポートしました");
 });
-$("btnImport").addEventListener("click", () => $("importFile").click());
+$("btnImport").addEventListener("click", () => {
+  if (demoMode) { toast("デモ表示中です。通常起動してから操作してください"); return; }
+  $("importFile").click();
+});
 $("importFile").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -1438,7 +1442,8 @@ window.addEventListener("resize", () => { if (activePage === "chart") renderChar
 
 /* ---------- タイマー ---------- */
 const RING_C = 2 * Math.PI * 104; // = 653.45
-let timerTotal = 90;      // 設定秒数
+let timerTotal = 90;      // 設定秒数（保存されるデフォルト）
+let timerSpan = 90;       // リング表示用: この回の分母
 let timerRemain = 90;     // 残り秒数
 let timerEnd = null;      // 実行中: 終了時刻(ms)
 let timerInterval = null;
@@ -1449,7 +1454,9 @@ function fmtTime(sec) {
 }
 function updateTimerUI() {
   $("timerDisplay").textContent = fmtTime(timerRemain);
-  const frac = timerTotal > 0 ? timerRemain / timerTotal : 0;
+  // リングの分母は「この回の最大残り時間」。+10秒で伸ばしても振り切れないようにする
+  if (timerRemain > timerSpan) timerSpan = timerRemain;
+  const frac = timerSpan > 0 ? timerRemain / timerSpan : 0;
   $("ringFg").style.strokeDashoffset = RING_C * (1 - Math.max(0, Math.min(1, frac)));
   $("btnTimerStart").textContent = timerEnd ? "一時停止" : (timerRemain < timerTotal && timerRemain > 0 ? "再開" : "スタート");
   $("timerSub").textContent = timerEnd ? "休憩中…" : "休憩タイマー";
@@ -1477,6 +1484,7 @@ function releaseWakeLock() {
 function startTimer(sec) {
   if (sec !== undefined) { timerTotal = sec; timerRemain = sec; }
   if (timerRemain <= 0) timerRemain = timerTotal;
+  timerSpan = Math.max(timerTotal, timerRemain);
   timerEnd = Date.now() + timerRemain * 1000;
   clearInterval(timerInterval);
   timerInterval = setInterval(tick, 250);
@@ -1497,6 +1505,7 @@ function resetTimer() {
   timerEnd = null;
   clearInterval(timerInterval);
   timerRemain = timerTotal;
+  timerSpan = timerTotal;
   releaseWakeLock();
   updateTimerUI();
 }
@@ -1550,8 +1559,9 @@ function sendRestNotification() {
 }
 /* バックグラウンドから戻ったとき即座に追いつく */
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) return;
-  if (timerEnd) { tick(); acquireWakeLock(); }   // 復帰時に経過分を反映
+  if (document.hidden || !timerEnd) return;
+  tick();                              // 復帰時に経過分を反映
+  if (timerEnd) acquireWakeLock();     // tick内で終了していたら取り直さない
 });
 
 /* サウンド (WebAudio) */
@@ -1602,6 +1612,7 @@ function adjustTimer(dsec) {
     // 停止中: デフォルトの休憩時間を10秒単位で変更して保存
     timerTotal = Math.max(10, timerTotal + dsec);
     timerRemain = timerTotal;
+    timerSpan = timerTotal;
     data.settings.timerSec = timerTotal;
     saveData();
   }
@@ -1904,6 +1915,7 @@ function initUI() {
   $("notifyHint").hidden = notifySupported();
   timerTotal = data.settings.timerSec || 90;
   timerRemain = timerTotal;
+  timerSpan = timerTotal;
   updatePresetChips();
   slotMode = data.settings.slotMode || "全身";
   renderTodayStats();
@@ -1952,6 +1964,10 @@ function loadDemoData() {
   const q = new URLSearchParams(location.search);
   if (q.get("demo") === "1") {
     demoMode = true;
+    // 実データと混ざらないよう、記録だけを切り離した複製に差し替える
+    data = JSON.parse(JSON.stringify(data));
+    data.sets = [];
+    data.sessions = {};
     loadDemoData();
     saveData = function () { /* デモ中は保存しない */ };
   }

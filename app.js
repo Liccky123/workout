@@ -1897,6 +1897,12 @@ function initUI() {
 }
 initUI();
 
+/* アプリショートカット (?tab=slot 等) から起動されたときのタブ切替 */
+{
+  const t = new URLSearchParams(location.search).get("tab");
+  if (t && Object.prototype.hasOwnProperty.call(pages, t)) showPage(t);
+}
+
 /* Service Worker */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
   window.addEventListener("load", () => {
